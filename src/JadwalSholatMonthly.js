@@ -30,7 +30,6 @@ const minutesToTime = (minutes) => {
     return `${String(hours).padStart(2, "0")}:${String(mins).padStart(2, "0")}`
 }
 
-
 export function JadwalSholatMonthly() {
     const [data, setData] = useState([])
     const [loading, setLoading] = useState(true)
@@ -38,7 +37,9 @@ export function JadwalSholatMonthly() {
     const [nextPrayer, setNextPrayer] = useState("")
     const [todayTimings, setTodayTimings] = useState({})
     const [isMobile, setIsMobile] = useState(false)
-
+    const [searchQuery, setSearchQuery] = useState("")
+    const [suggestions, setSuggestions] = useState([])
+    const [showSuggestions, setShowSuggestions] = useState(false)
     const [city, setCity] = useState("Bandung")
     const country = "Indonesia"
     const today = new Date().toISOString().split("T")[0]
@@ -48,16 +49,20 @@ export function JadwalSholatMonthly() {
     const currentYear = currentDate.getFullYear()
     const currentMonth = currentDate.getMonth() + 1
 
-    const cities = [
-        "Bandung",
-        "Jakarta",
-        "Malang",
-        "Surabaya",
-        "Yogyakarta",
-        "Medan",
-        "Semarang",
-        "Makassar",
-        "Palembang",
+    // Sample list of major Indonesian cities for suggestions
+    const indonesianCities = [
+        "Bandung", "Jakarta", "Surabaya", "Medan", "Bekasi", "Depok", 
+        "Tangerang", "Semarang", "Makassar", "Palembang", "Batam", 
+        "Bogor", "Pekanbaru", "Bandar Lampung", "Malang", "Padang", 
+        "Denpasar", "Samarinda", "Tasikmalaya", "Serang", "Balikpapan",
+        "Banjarmasin", "Pontianak", "Cimahi", "Sukabumi", "Manado", 
+        "Yogyakarta", "Cirebon", "Bengkulu", "Pematangsiantar", "Banda Aceh",
+        "Jayapura", "Pekalongan", "Tegal", "Kediri", "Binjai", "Purwokerto",
+        "Probolinggo", "Madiun", "Salatiga", "Lhokseumawe", "Cilegon", 
+        "Mataram", "Parepare", "Prabumulih", "Palu", "Ambon", "Batu", 
+        "Singkawang", "Blitar", "Tanjungpinang", "Sibolga", "Gorontalo",
+        "Mojokerto", "Magelang", "Bukittinggi", "Ternate", "Kupang",
+        "Tidore Kepulauan", "Bontang", "Metro", "Sabang", "Bitung"
     ]
 
     useEffect(() => {
@@ -169,6 +174,28 @@ export function JadwalSholatMonthly() {
         setTimeLeft("Besok")
     }
 
+    const handleSearchChange = (e) => {
+        const query = e.target.value
+        setSearchQuery(query)
+        
+        if (query.length > 1) {
+            const filtered = indonesianCities.filter(city => 
+                city.toLowerCase().includes(query.toLowerCase())
+            )
+            setSuggestions(filtered)
+            setShowSuggestions(true)
+        } else {
+            setSuggestions([])
+            setShowSuggestions(false)
+        }
+    }
+
+    const handleCitySelect = (selectedCity) => {
+        setCity(selectedCity)
+        setSearchQuery(selectedCity)
+        setShowSuggestions(false)
+    }
+
     if (loading)
         return (
             <div style={{ padding: "20px", textAlign: "center" }}>
@@ -250,37 +277,57 @@ export function JadwalSholatMonthly() {
                     </div>
                 </div>
 
-                {/* City Selector Dropdown */}
-                <select
-                    value={city}
-                    onChange={(e) => setCity(e.target.value)}
-                    style={{
-                        backgroundColor: "#fff",
-                        padding: isMobile ? "8px 16px" : "10px 20px",
-                        borderRadius: "8px",
-                        boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-                        width: isMobile ? "100%" : "auto",
-                        minWidth: isMobile ? "100%" : "200px",
-                        fontSize: isMobile ? "14px" : "16px",
-                        fontWeight: "500",
-                        appearance: "none",
-                        WebkitAppearance: "none",
-                        MozAppearance: "none",
-                        backgroundImage:
-                            "url(\"data:image/svg+xml;utf8,<svg fill='black' height='16' viewBox='0 0 24 24' width='16' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>\")",
-                        backgroundRepeat: "no-repeat",
-                        backgroundPosition: "right 10px center",
-                        backgroundSize: "16px 16px",
-                        border: "1px solid #ccc",
-                        cursor: "pointer",
-                    }}
-                >
-                    {cities.map((cityName) => (
-                        <option key={cityName} value={cityName}>
-                            {cityName}
-                        </option>
-                    ))}
-                </select>
+                {/* City Search Input */}
+                <div style={{ position: "relative", width: isMobile ? "100%" : "auto" }}>
+                    <input
+                        type="text"
+                        value={searchQuery}
+                        onChange={handleSearchChange}
+                        placeholder="Cari kota di Indonesia..."
+                        style={{
+                            backgroundColor: "#fff",
+                            padding: isMobile ? "8px 16px" : "10px 20px",
+                            borderRadius: "8px",
+                            boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                            width: isMobile ? "100%" : "300px",
+                            fontSize: isMobile ? "14px" : "16px",
+                            fontWeight: "500",
+                            border: "1px solid #ccc",
+                        }}
+                    />
+                    {showSuggestions && suggestions.length > 0 && (
+                        <div style={{
+                            position: "absolute",
+                            top: "100%",
+                            left: 0,
+                            right: 0,
+                            backgroundColor: "#fff",
+                            borderRadius: "8px",
+                            boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
+                            zIndex: 100,
+                            maxHeight: "300px",
+                            overflowY: "auto",
+                            marginTop: "5px",
+                        }}>
+                            {suggestions.map((suggestion, index) => (
+                                <div
+                                    key={index}
+                                    onClick={() => handleCitySelect(suggestion)}
+                                    style={{
+                                        padding: "10px 15px",
+                                        cursor: "pointer",
+                                        borderBottom: "1px solid #eee",
+                                        ":hover": {
+                                            backgroundColor: "#f5f5f5",
+                                        },
+                                    }}
+                                >
+                                    {suggestion}
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
 
                 {/* Quote */}
                 {!isMobile && (
@@ -297,7 +344,7 @@ export function JadwalSholatMonthly() {
                     >
                         <b>Hadis Sholat</b>
                         <br />
-                        "Isi pake hadis"
+                        "Shalat itu tiang agama. Barangsiapa mendirikannya maka sungguh ia telah mendirikan agama, dan barangsiapa meninggalkannya maka sungguh ia telah meruntuhkan agama." (HR. Baihaqi)
                     </div>
                 )}
             </div>
